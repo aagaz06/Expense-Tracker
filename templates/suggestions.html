@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Suggestions{% endblock %}
+{% block breadcrumb %}SUGGESTIONS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-label">OPTIMIZE</div>
+    <h1 class="page-title">Smart Suggestions</h1>
+    <p class="page-subtitle">AI-powered insights to plug your money leaks</p>
+</div>
+
+<!-- Summary Banner -->
+{% if total_potential_savings > 0 %}
+<div class="content-card mb-4" style="border-color:rgba(200,241,53,0.2);background:rgba(200,241,53,0.04);">
+    <div class="card-body-custom">
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+            <div style="font-size:40px;"><i class="fa-solid fa-lightbulb" style="color:var(--accent);"></i></div>
+            <div style="flex:1;">
+                <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--text-muted);font-family:var(--font-mono);text-transform:uppercase;">Potential Monthly Savings</div>
+                <div style="font-size:36px;font-weight:800;font-family:var(--font-mono);color:var(--accent);letter-spacing:-1px;">Rs.{{ total_potential_savings }}</div>
+                <div style="font-size:12px;color:var(--text-secondary);">{{ suggestions | length }} actionable suggestions found based on your spending patterns</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">YEARLY POTENTIAL</div>
+                <div style="font-size:22px;font-weight:800;font-family:var(--font-mono);color:var(--success);">Rs.{{ total_potential_savings * 12 }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-12 col-lg-8">
+
+        <!-- Leaks Section -->
+        {% if leaks %}
+        <div class="mb-4">
+            <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--danger);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:14px;">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>Money Leaks Detected
+            </div>
+            {% for leak in leaks %}
+            <div class="suggestion-card" style="border-left-color:var(--danger);">
+                <div class="suggestion-icon" style="background:rgba(255,77,109,0.12);color:var(--danger);">
+                    <i class="fa-solid fa-{{ leak.icon }}"></i>
+                </div>
+                <div class="suggestion-content">
+                    <div class="suggestion-title">{{ leak.title }}</div>
+                    <div class="suggestion-desc">{{ leak.description }}</div>
+                    <div style="margin-top:8px;">
+                        <span style="font-size:11px;font-family:var(--font-mono);color:var(--danger);">{{ leak.frequency }}</span>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="suggestion-saving" style="color:var(--danger);">Rs.{{ leak.amount }}</div>
+                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">wasted/mo</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Saving Opportunities -->
+        {% if saving_suggestions %}
+        <div class="mb-4">
+            <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--success);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:14px;">
+                <i class="fa-solid fa-piggy-bank me-2"></i>Saving Opportunities
+            </div>
+            {% for s in saving_suggestions %}
+            <div class="suggestion-card" style="border-left-color:var(--success);">
+                <div class="suggestion-icon" style="background:rgba(0,217,163,0.12);color:var(--success);">
+                    <i class="fa-solid fa-{{ s.icon }}"></i>
+                </div>
+                <div class="suggestion-content">
+                    <div class="suggestion-title">{{ s.title }}</div>
+                    <div class="suggestion-desc">{{ s.description }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="suggestion-saving">Rs.{{ s.potential_saving }}</div>
+                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">save/mo</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Budget Alerts -->
+        {% if budget_alerts %}
+        <div class="mb-4">
+            <div style="font-size:12px;font-weight:700;letter-spacing:1px;color:var(--warning);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:14px;">
+                <i class="fa-solid fa-bell me-2"></i>Budget Alerts
+            </div>
+            {% for alert in budget_alerts %}
+            <div class="suggestion-card" style="border-left-color:var(--warning);">
+                <div class="suggestion-icon" style="background:rgba(255,176,58,0.12);color:var(--warning);">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div class="suggestion-content">
+                    <div class="suggestion-title">{{ alert.category }} Budget at {{ alert.pct }}%</div>
+                    <div class="suggestion-desc">{{ alert.message }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:18px;font-weight:800;font-family:var(--font-mono);color:var(--warning);">{{ alert.pct }}%</div>
+                    <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);">used</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not leaks and not saving_suggestions and not budget_alerts %}
+        <div class="content-card">
+            <div class="card-body-custom">
+                <div class="empty-state">
+                    <div class="empty-icon" style="color:var(--success);"><i class="fa-solid fa-face-smile-beam"></i></div>
+                    <div class="empty-title">Your finances look healthy!</div>
+                    <div class="empty-desc">Keep tracking expenses to get personalized suggestions.</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Side Panel -->
+    <div class="col-12 col-lg-4">
+
+        <!-- Quick Tips -->
+        <div class="content-card mb-3">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Quick Tips</span>
+            </div>
+            <div class="card-body-custom">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    {% set tips = [
+                        ('fa-coffee', 'Making coffee at home can save Rs.2000-5000/month vs buying daily.'),
+                        ('fa-utensils', 'Meal prepping reduces food expenses by up to 40%.'),
+                        ('fa-mobile', 'Review subscriptions quarterly and cancel unused ones.'),
+                        ('fa-cart-shopping', 'Use a shopping list to avoid impulse purchases.'),
+                        ('fa-bolt', 'Switch off appliances at night to cut utility bills.')
+                    ] %}
+                    {% for icon, text in tips %}
+                    <div style="display:flex;gap:10px;align-items:flex-start;">
+                        <div style="width:28px;height:28px;border-radius:6px;background:var(--accent-glow);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="fa-solid {{ icon }}" style="font-size:11px;color:var(--accent);"></i>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">{{ text }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Summary -->
+        <div class="content-card">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Financial Health</span>
+            </div>
+            <div class="card-body-custom" style="text-align:center;">
+                <div style="font-size:64px;font-weight:800;font-family:var(--font-mono);color:var(--accent);letter-spacing:-3px;line-height:1;">
+                    {{ health.score }}
+                </div>
+                <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;">out of 100</div>
+                <span class="health-badge {{ health.class }}" style="margin:10px auto;display:inline-block;">{{ health.label }}</span>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:10px;line-height:1.6;">{{ health.message }}</div>
+
+                <div style="margin-top:20px;">
+                    {% set score_items = [
+                        ('Budget Adherence', health.budget_pct),
+                        ('Leak Control', health.leak_pct),
+                        ('Expense Diversity', health.diversity_pct)
+                    ] %}
+                    {% for name, pct in score_items %}
+                    <div style="margin-bottom:10px;text-align:left;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                            <span style="font-size:11px;color:var(--text-secondary);">{{ name }}</span>
+                            <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);">{{ pct }}%</span>
+                        </div>
+                        <div class="progress-track" style="height:4px;">
+                            <div class="progress-fill {% if pct < 50 %}danger{% elif pct < 75 %}warning{% endif %}" style="width:{{ pct }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

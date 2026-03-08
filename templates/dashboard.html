@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}DASHBOARD{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/charts.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-3">
+    <div>
+        <div class="page-label">DASHBOARD</div>
+        <h1 class="page-title">Overview</h1>
+        <p class="page-subtitle">Your financial health at a glance</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="date-badge">{{ current_month }}</div>
+        <select class="form-control-custom" id="monthFilter" style="width:auto;padding:8px 14px;">
+            {% for m in available_months %}
+            <option value="{{ m.value }}" {% if m.value == current_month %}selected{% endif %}>{{ m.label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
+            <div class="stat-value mono" data-value="{{ stats.total_spent }}" data-prefix="Rs.">Rs.0</div>
+            <div class="stat-label">Total Spent</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-circle-dot"></i></div>
+            <div class="stat-value mono" data-value="{{ stats.total_budget }}" data-prefix="Rs.">Rs.0</div>
+            <div class="stat-label">Total Budget</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-bolt"></i></div>
+            <div class="health-score">
+                <span class="score-num" data-value="{{ stats.health_score }}">0</span>
+                <span class="score-denom">/100</span>
+            </div>
+            <div class="stat-label">Health Score</div>
+            <span class="health-badge {{ stats.health_class }}">{{ stats.health_label }}</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-value {% if stats.leaks_found > 0 %}danger{% endif %} mono" data-value="{{ stats.leaks_found }}">0</div>
+            <div class="stat-label">Leaks Found</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <!-- Daily Spending Chart -->
+    <div class="col-12 col-lg-8">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Daily Spending</span>
+                <a href="{{ url_for('analytics') }}" class="card-action">View All →</a>
+            </div>
+            <div class="card-body-custom">
+                {% if daily_spending %}
+                    <canvas id="dailyChart" height="180"></canvas>
+                {% else %}
+                    <div class="chart-empty">
+                        <div class="chart-empty-icon"><i class="fa-solid fa-chart-area"></i></div>
+                        <div class="chart-empty-text">No spending data yet.<br>Add expenses to see trends.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="col-12 col-lg-4">
+        <div class="content-card h-100">
+            <div class="card-header-custom">
+                <span class="card-title-custom">By Category</span>
+            </div>
+            <div class="card-body-custom">
+                {% if category_breakdown %}
+                    <canvas id="catChart" height="200"></canvas>
+                {% else %}
+                    <div class="chart-empty">
+                        <div class="chart-empty-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                        <div class="chart-empty-text">No data yet.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Recent Expenses -->
+    <div class="col-12 col-lg-7">
+        <div class="content-card">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Recent Expenses</span>
+                <a href="{{ url_for('expenses') }}" class="card-action">All Expenses →</a>
+            </div>
+            {% if recent_expenses %}
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exp in recent_expenses %}
+                        <tr>
+                            <td class="primary">{{ exp.description }}</td>
+                            <td><span class="cat-badge {{ exp.category|lower }}">{{ exp.category }}</span></td>
+                            <td class="mono" style="font-size:11px;color:var(--text-muted);">{{ exp.date }}</td>
+                            <td class="mono primary">Rs.{{ exp.amount }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="card-body-custom">
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fa-solid fa-receipt"></i></div>
+                    <div class="empty-title">No expenses yet</div>
+                    <div class="empty-desc">Start tracking your spending</div>
+                    <a href="{{ url_for('expenses') }}" class="btn-accent mt-2" style="font-size:11px;padding:8px 16px;">
+                        <i class="fa-solid fa-plus"></i> Add Expense
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Leaks & Budget -->
+    <div class="col-12 col-lg-5">
+        <div class="content-card mb-3">
+            <div class="card-header-custom">
+                <span class="card-title-custom">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);margin-right:6px;font-size:12px;"></i>
+                    Money Leaks
+                </span>
+                <a href="{{ url_for('suggestions') }}" class="card-action">Fix Now →</a>
+            </div>
+            <div class="card-body-custom" style="padding-top:14px;">
+                {% if leaks %}
+                    {% for leak in leaks %}
+                    <div class="leak-item">
+                        <div class="leak-dot"></div>
+                        <div style="flex:1;">
+                            <div style="font-size:13px;font-weight:600;color:var(--text-primary);">{{ leak.title }}</div>
+                            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">{{ leak.desc }}</div>
+                        </div>
+                        <div style="font-size:12px;font-weight:800;font-family:var(--font-mono);color:var(--danger);">Rs.{{ leak.amount }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state" style="padding:24px;">
+                        <div class="empty-icon" style="color:var(--success);"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="empty-title">No leaks detected!</div>
+                        <div class="empty-desc">Your spending looks healthy.</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Budget Overview -->
+        <div class="content-card">
+            <div class="card-header-custom">
+                <span class="card-title-custom">Budget Status</span>
+                <a href="{{ url_for('budgets') }}" class="card-action">Manage →</a>
+            </div>
+            <div class="card-body-custom">
+                {% if budgets %}
+                    {% for b in budgets %}
+                    <div class="budget-progress">
+                        <div class="budget-progress-header">
+                            <span class="budget-progress-name">{{ b.category }}</span>
+                            <span class="budget-progress-values">Rs.{{ b.spent }} / Rs.{{ b.limit }}</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill {% if b.pct > 90 %}danger{% elif b.pct > 70 %}warning{% endif %}"
+                                 style="width:{{ b.pct }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state" style="padding:20px;">
+                        <div class="empty-icon"><i class="fa-solid fa-wallet"></i></div>
+                        <div class="empty-title">No budgets set</div>
+                        <a href="{{ url_for('budgets') }}" class="btn-ghost mt-2" style="font-size:11px;padding:7px 14px;">Set Budget</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const daily = {{ daily_spending | tojson }};
+const cats = {{ category_breakdown | tojson }};
+
+if (daily && daily.length > 0) {
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: daily.map(d => d.day),
+            datasets: [{
+                label: 'Spent (Rs.)',
+                data: daily.map(d => d.amount),
+                borderColor: '#c8f135',
+                backgroundColor: 'rgba(200,241,53,0.07)',
+                borderWidth: 2,
+                pointBackgroundColor: '#c8f135',
+                pointRadius: 4,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { color: '#222' }, ticks: { color: '#666', font: { family: 'Space Mono', size: 10 } } },
+                y: { grid: { color: '#222' }, ticks: { color: '#666', font: { family: 'Space Mono', size: 10 }, callback: v => 'Rs.' + v } }
+            }
+        }
+    });
+}
+
+if (cats && cats.length > 0) {
+    const ctx2 = document.getElementById('catChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: cats.map(c => c.name),
+            datasets: [{
+                data: cats.map(c => c.amount),
+                backgroundColor: ['#c8f135','#5eb8ff','#ff4d6d','#ffb03a','#00d9a3','#b46cff'],
+                borderWidth: 0,
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            cutout: '65%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#888', font: { family: 'Space Mono', size: 10 }, padding: 12, boxWidth: 10 }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

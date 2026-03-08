@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeakTracker - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+<div class="auth-wrapper">
+    <!-- Background decoration -->
+    <div style="position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;">
+        <div style="position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(200,241,53,0.04) 0%,transparent 70%);border-radius:50%;"></div>
+        <div style="position:absolute;bottom:-200px;left:-200px;width:400px;height:400px;background:radial-gradient(circle,rgba(200,241,53,0.03) 0%,transparent 70%);border-radius:50%;"></div>
+    </div>
+
+    <div class="auth-card" style="position:relative;z-index:1;">
+        <div class="auth-logo">
+            <div class="logo-icon"><i class="fa-solid fa-droplet"></i></div>
+            <span class="logo-text">LeakTracker</span>
+        </div>
+
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-sub">Sign in to track your expenses and plug money leaks.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert-custom alert-{{ category }}">
+                <i class="fa-solid fa-circle-exclamation"></i> {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group-custom">
+                <label class="form-label-custom">Email</label>
+                <input type="email" name="email" class="form-control-custom" placeholder="you@example.com" required autofocus>
+            </div>
+            <div class="form-group-custom">
+                <label class="form-label-custom">Password</label>
+                <div style="position:relative;">
+                    <input type="password" name="password" id="passwordInput" class="form-control-custom" placeholder="••••••••" required style="padding-right:42px;">
+                    <button type="button" onclick="togglePass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13px;">
+                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-accent w-100" style="justify-content:center;padding:12px;font-size:13px;margin-top:4px;">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </button>
+        </form>
+
+        <div class="auth-divider"></div>
+        <p style="font-size:13px;color:var(--text-secondary);text-align:center;">
+            Don't have an account? <a href="{{ url_for('register') }}" class="auth-link">Create one →</a>
+        </p>
+    </div>
+</div>
+
+<script>
+function togglePass() {
+    const inp = document.getElementById('passwordInput');
+    const icon = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+    } else {
+        inp.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+    }
+}
+</script>
+</body>
+</html>

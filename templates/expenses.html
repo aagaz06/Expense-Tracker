@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+{% block breadcrumb %}EXPENSES{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-3">
+    <div>
+        <div class="page-label">TRACKING</div>
+        <h1 class="page-title">Expenses</h1>
+        <p class="page-subtitle">All your recorded transactions</p>
+    </div>
+    <button class="btn-accent" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+        <i class="fa-solid fa-plus"></i> Add Expense
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="content-card mb-4">
+    <div class="card-body-custom" style="padding:16px 20px;">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label-custom">Search</label>
+                <input type="text" class="form-control-custom" id="searchInput" placeholder="Search description..." value="{{ filters.search or '' }}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label-custom">Category</label>
+                <select class="form-control-custom" id="catFilter">
+                    <option value="">All</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if filters.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label-custom">Month</label>
+                <select class="form-control-custom" id="monthFilter">
+                    {% for m in available_months %}
+                    <option value="{{ m.value }}" {% if filters.month == m.value %}selected{% endif %}>{{ m.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label-custom">Sort By</label>
+                <select class="form-control-custom" id="sortFilter">
+                    <option value="date_desc" {% if filters.sort == 'date_desc' %}selected{% endif %}>Date ↓</option>
+                    <option value="date_asc" {% if filters.sort == 'date_asc' %}selected{% endif %}>Date ↑</option>
+                    <option value="amount_desc" {% if filters.sort == 'amount_desc' %}selected{% endif %}>Amount ↓</option>
+                    <option value="amount_asc" {% if filters.sort == 'amount_asc' %}selected{% endif %}>Amount ↑</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <button class="btn-accent w-100" onclick="applyFilters()">
+                    <i class="fa-solid fa-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Strip -->
+<div class="row g-3 mb-4">
+    <div class="col-4">
+        <div class="stat-card" style="padding:14px 18px;">
+            <div class="stat-label mb-1">Total</div>
+            <div class="stat-value" style="font-size:20px;">Rs.{{ summary.total }}</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="stat-card" style="padding:14px 18px;">
+            <div class="stat-label mb-1">Transactions</div>
+            <div class="stat-value" style="font-size:20px;">{{ summary.count }}</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="stat-card" style="padding:14px 18px;">
+            <div class="stat-label mb-1">Avg per Day</div>
+            <div class="stat-value" style="font-size:20px;">Rs.{{ summary.avg_day }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Expenses Table -->
+<div class="content-card">
+    <div class="card-header-custom">
+        <span class="card-title-custom">{{ expenses | length }} Transactions</span>
+        <a href="{{ url_for('export_expenses') }}" class="card-action">
+            <i class="fa-solid fa-download"></i> Export CSV
+        </a>
+    </div>
+    {% if expenses %}
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exp in expenses %}
+                <tr>
+                    <td class="mono" style="color:var(--text-muted);font-size:11px;">{{ loop.index }}</td>
+                    <td class="primary">{{ exp.description }}</td>
+                    <td><span class="cat-badge {{ exp.category|lower }}">{{ exp.category }}</span></td>
+                    <td class="mono" style="font-size:11px;color:var(--text-muted);">{{ exp.date }}</td>
+                    <td class="mono primary" style="color:var(--accent);">Rs.{{ exp.amount }}</td>
+                    <td style="font-size:12px;color:var(--text-muted);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ exp.note or '—' }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <button class="action-btn" title="Edit"
+                                onclick="editExpense({{ exp | tojson }})">
+                                <i class="fa-solid fa-pen" style="font-size:12px;"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('delete_expense', id=exp.id) }}" style="display:inline;">
+                                <button type="submit" class="action-btn" title="Delete"
+                                    onclick="return confirm('Delete this expense?')"
+                                    style="color:var(--danger);">
+                                    <i class="fa-solid fa-trash" style="font-size:12px;"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body-custom">
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-receipt"></i></div>
+            <div class="empty-title">No expenses found</div>
+            <div class="empty-desc">Try changing filters or add your first expense</div>
+            <button class="btn-accent mt-3" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                <i class="fa-solid fa-plus"></i> Add Expense
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade modal-custom" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_expense') }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Description *</label>
+                                <input type="text" name="description" class="form-control-custom" placeholder="e.g. Lunch at cafe" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Amount (Rs.) *</label>
+                                <input type="number" name="amount" class="form-control-custom" placeholder="0.00" step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Category *</label>
+                                <select name="category" class="form-control-custom" required>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Date *</label>
+                                <input type="date" name="date" class="form-control-custom" value="{{ today }}" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Note (optional)</label>
+                                <input type="text" name="note" class="form-control-custom" placeholder="Optional note">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-accent">
+                        <i class="fa-solid fa-plus"></i> Add
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div class="modal fade modal-custom" id="editExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Expense</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editExpenseForm">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Description *</label>
+                                <input type="text" name="description" id="editDesc" class="form-control-custom" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Amount (Rs.) *</label>
+                                <input type="number" name="amount" id="editAmount" class="form-control-custom" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Category *</label>
+                                <select name="category" id="editCat" class="form-control-custom" required>
+                                    {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Date *</label>
+                                <input type="date" name="date" id="editDate" class="form-control-custom" required>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group-custom">
+                                <label class="form-label-custom">Note</label>
+                                <input type="text" name="note" id="editNote" class="form-control-custom">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-ghost" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-accent">
+                        <i class="fa-solid fa-check"></i> Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editExpense(exp) {
+    document.getElementById('editExpenseForm').action = `/expenses/edit/${exp.id}`;
+    document.getElementById('editDesc').value = exp.description;
+    document.getElementById('editAmount').value = exp.amount;
+    document.getElementById('editCat').value = exp.category;
+    document.getElementById('editDate').value = exp.date;
+    document.getElementById('editNote').value = exp.note || '';
+    new bootstrap.Modal(document.getElementById('editExpenseModal')).show();
+}
+
+function applyFilters() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('search', document.getElementById('searchInput').value);
+    url.searchParams.set('category', document.getElementById('catFilter').value);
+    url.searchParams.set('month', document.getElementById('monthFilter').value);
+    url.searchParams.set('sort', document.getElementById('sortFilter').value);
+    window.location.href = url.toString();
+}
+</script>
+{% endblock %}

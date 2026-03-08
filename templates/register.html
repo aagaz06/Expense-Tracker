@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeakTracker - Register</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+<div class="auth-wrapper">
+    <div style="position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;">
+        <div style="position:absolute;top:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(200,241,53,0.04) 0%,transparent 70%);border-radius:50%;"></div>
+    </div>
+
+    <div class="auth-card" style="position:relative;z-index:1;max-width:460px;">
+        <div class="auth-logo">
+            <div class="logo-icon"><i class="fa-solid fa-droplet"></i></div>
+            <span class="logo-text">LeakTracker</span>
+        </div>
+
+        <h1 class="auth-title">Create account</h1>
+        <p class="auth-sub">Start tracking your expenses and saving more money today.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert-custom alert-{{ category }}">
+                <i class="fa-solid fa-circle-exclamation"></i> {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="form-group-custom" style="margin-bottom:0;">
+                        <label class="form-label-custom">Full Name</label>
+                        <input type="text" name="username" class="form-control-custom" placeholder="Your name" required>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group-custom" style="margin-bottom:0;">
+                        <label class="form-label-custom">Email</label>
+                        <input type="email" name="email" class="form-control-custom" placeholder="you@example.com" required>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-group-custom" style="margin-bottom:0;">
+                        <label class="form-label-custom">Password</label>
+                        <input type="password" name="password" class="form-control-custom" placeholder="Min 8 chars" minlength="8" required>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <div class="form-group-custom" style="margin-bottom:0;">
+                        <label class="form-label-custom">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control-custom" placeholder="Repeat password" required>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group-custom" style="margin-bottom:0;">
+                        <label class="form-label-custom">Monthly Budget (Rs.)</label>
+                        <input type="number" name="monthly_budget" class="form-control-custom" placeholder="e.g. 20000" min="1">
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-family:var(--font-mono);">Optional — you can set this later</div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-accent w-100" style="justify-content:center;padding:12px;font-size:13px;margin-top:20px;">
+                <i class="fa-solid fa-user-plus"></i> Create Account
+            </button>
+        </form>
+
+        <div class="auth-divider"></div>
+        <p style="font-size:13px;color:var(--text-secondary);text-align:center;">
+            Already have an account? <a href="{{ url_for('login') }}" class="auth-link">Sign in →</a>
+        </p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeakTracker - {% block title %}Dashboard{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <span class="logo-icon"><i class="fa-solid fa-droplet"></i></span>
+            <span class="logo-text">LeakTracker</span>
+        </div>
+        <button class="sidebar-close d-md-none" id="sidebarClose">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-gauge-high"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('expenses') }}" class="nav-item {% if request.endpoint == 'expenses' %}active{% endif %}">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Expenses</span>
+        </a>
+        <a href="{{ url_for('budgets') }}" class="nav-item {% if request.endpoint == 'budgets' %}active{% endif %}">
+            <i class="fa-solid fa-wallet"></i>
+            <span>Budgets</span>
+        </a>
+        <a href="{{ url_for('analytics') }}" class="nav-item {% if request.endpoint == 'analytics' %}active{% endif %}">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Analytics</span>
+        </a>
+        <a href="{{ url_for('suggestions') }}" class="nav-item {% if request.endpoint == 'suggestions' %}active{% endif %}">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span>Suggestions</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="user-details">
+                <span class="user-name">{{ session.get('username', 'User') }}</span>
+                <span class="user-email">{{ session.get('email', 'user@example.com') }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay for mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Main Content -->
+<div class="main-content" id="mainContent">
+    <!-- Top bar -->
+    <div class="topbar">
+        <button class="topbar-toggle" id="sidebarToggle">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="topbar-breadcrumb">
+            <span class="breadcrumb-parent">LEAKTRACKER</span>
+            <span class="breadcrumb-sep">/</span>
+            <span class="breadcrumb-current">{% block breadcrumb %}DASHBOARD{% endblock %}</span>
+        </div>
+        <div class="topbar-actions">
+            <button class="action-btn" title="Notifications">
+                <i class="fa-solid fa-bell"></i>
+                <span class="badge-dot"></span>
+            </button>
+            <a href="{{ url_for('logout') }}" class="action-btn" title="Logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Page Content -->
+    <div class="page-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert-custom alert-{{ category }}">
+                <i class="fa-solid fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
